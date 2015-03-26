@@ -9,12 +9,12 @@ resource_id_column_index = 2
 part_column_index        = 3
 zybook_code_column_index = 9
 
-def read_activity_data_as_list(filename):
+def load_activity_data_as_list(filename):
     with open(filename, 'rbU') as csv_con:
         reader = csv.reader(csv_con, delimiter=',')
         return list(reader)
 
-def separate_by_zybooks(activity_data):
+def split_by_zybooks(activity_data):
     global zybook_code_column_index
     
     activity_data_header = activity_data[0]
@@ -73,8 +73,8 @@ def write_to_csv(activity_data_by_zybook):
                 writer.writerow(activity)
 
 def load_split_and_sort_activity_data(filename, export_to_csv=False):
-    activity_data = read_activity_data_as_list(filename)
-    activity_data_by_zybook = separate_by_zybooks(activity_data)
+    activity_data                  = load_activity_data_as_list(filename)
+    activity_data_by_zybook        = split_by_zybooks(activity_data)
     sorted_activity_data_by_zybook = sort_activity_data(activity_data_by_zybook)
     
     if export_to_csv:
