@@ -72,11 +72,18 @@ def write_to_csv(activity_data_by_zybook):
             for activity in activity_data:
                 writer.writerow(activity)
 
-def main(filename):
+def load_split_and_sort_activity_data(filename, export_to_csv=False):
     activity_data = read_activity_data_as_list(filename)
     activity_data_by_zybook = separate_by_zybooks(activity_data)
     sorted_activity_data_by_zybook = sort_activity_data(activity_data_by_zybook)
-    write_to_csv(sorted_activity_data_by_zybook)
+    
+    if export_to_csv:
+        write_to_csv(sorted_activity_data_by_zybook)
+    
+    return sorted_activity_data_by_zybook
+
+def main(filename):
+    load_split_and_sort_activity_data(filename)
     
 if __name__ == '__main__':
     main(sys.argv[1])
