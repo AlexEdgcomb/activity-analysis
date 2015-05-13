@@ -1,0 +1,55 @@
+Earnestness analysis
+'UCRCS10Fall2014', 'FresnoStateCSCI40CppFall2014', 'CSUFresnoCSCI40Fall2014', 'CHCSCSCI110CppFall14', 'MiamiDadeCOP1334Fall2014'
+239, 76, 160, 90, 108
+
+Points awarded analysis
+'UMichENGR151Fall2014', 'UNCPCSC2150DiscMathFall14', 'UMichFall2014', 'ULMCSCI3026DiscMathFall14', 'CSULB6973Fall2014', 'USFENG4453Fall2014', 'CUNYCSCI120DMFall2014', 'NorthwesternEECS212Fall2014', 'NNUENGR4230Fall2014', 'UCRCS10Fall2014', 'UCRCS12Fall2014', 'GMUCS112Python3Fall2014', 'CalvinCS108Fall2014', 'UtahValleyCS2300Fall2014', 'OUAME2402Fall2014C', 'UCICS151Fall2014', 'MacombITCS1140Python3Fall2014', 'UCIICS6BDiscreteMathematicsSummer2014', 'CMICHCPS180Fall2014Java', 'SVSUMath300DMFall2014', 'MSUCSE1284Python3Fall2014', 'FernCreek2014', 'TulaneCOSC30006000Fall2014', 'MTechCSCI340DiscMathFall14', 'UTPACSCI1370Fall2014', 'MSStateECE3724Fall2014', 'UCIICS31Fall2014', 'SJSUCS49CHowellFall2014'
+173, 47, 150, 105, 191, 112, 82, 110, 70, 145, 218, 49, 100, 151, 237, 65, 239, 240, 72, 171, 19, 71, 136, 198, 197, 45, 225, 101
+
+Combined earnestness and points awarded analyses
+'UMichENGR151Fall2014', 'UNCPCSC2150DiscMathFall14', 'UMichFall2014', 'ULMCSCI3026DiscMathFall14', 'CSULB6973Fall2014', 'USFENG4453Fall2014', 'CUNYCSCI120DMFall2014', 'NorthwesternEECS212Fall2014', 'NNUENGR4230Fall2014', 'UCRCS10Fall2014', 'UCRCS12Fall2014', 'GMUCS112Python3Fall2014', 'CalvinCS108Fall2014', 'UtahValleyCS2300Fall2014', 'OUAME2402Fall2014C', 'UCICS151Fall2014', 'MacombITCS1140Python3Fall2014', 'UCIICS6BDiscreteMathematicsSummer2014', 'CMICHCPS180Fall2014Java', 'SVSUMath300DMFall2014', 'MSUCSE1284Python3Fall2014', 'FernCreek2014', 'TulaneCOSC30006000Fall2014', 'MTechCSCI340DiscMathFall14', 'UTPACSCI1370Fall2014', 'MSStateECE3724Fall2014', 'UCIICS31Fall2014', 'SJSUCS49CHowellFall2014', 'FresnoStateCSCI40CppFall2014', 'CSUFresnoCSCI40Fall2014', 'CHCSCSCI110CppFall14', 'MiamiDadeCOP1334Fall2014'
+173, 47, 150, 105, 191, 112, 82, 110, 70, 145, 218, 49, 100, 151, 237, 65, 239, 240, 72, 171, 19, 71, 136, 198, 197, 45, 225, 101, 76, 160, 90, 108
+
+-------------------
+
+-- List of students
+
+SELECT user_id
+FROM UserZyBookPermissions
+WHERE zybook_id IN (173, 47, 150, 105, 191, 112, 82, 110, 70, 145, 218, 49, 100, 151, 237, 65, 239, 240, 72, 171, 19, 71, 136, 198, 197, 45, 225, 101, 76, 160, 90, 108)
+    AND subscribed = 1
+    AND user_id NOT IN (12176) -- Student in both UCRCS10 and UCRCS12
+GROUP BY user_id
+
+---------------------
+
+-- Mapping of CRID to section and chapter
+
+SELECT ContentResourceCanonicalSections.content_resource_id, zyBookContentSections.chapter_number, zyBookContentSections.section_number, zyBookContentSections.zybook_id, ContentResources.parts
+FROM zyBookContentSections, ContentResourceCanonicalSections, ContentResources
+WHERE zyBookContentSections.canonical_section_id = ContentResourceCanonicalSections.canonical_section_id
+  AND ContentResources.content_resource_id = ContentResourceCanonicalSections.content_resource_id
+  AND zyBookContentSections.zybook_id IN (173, 47, 150, 105, 191, 112, 82, 110, 70, 145, 218, 49, 100, 151, 237, 65, 239, 240, 72, 171, 19, 71, 136, 198, 197, 45, 225, 101, 76, 160, 90, 108)
+  AND ContentResources.resource_type_id = 6
+  
+---------------------
+
+-- Activity data for given zyBook
+
+SELECT ContentResourceActivities.timestamp,  ContentResourceActivities.part, ContentResourceActivities.metadata LIKE '%forfeit%', ContentResourceActivities.complete, ContentResourceActivities.answer is not NULL AND LENGTH(TRIM(ContentResourceActivities.answer)) > 0, ContentResourceActivities.user_id, ContentResourceActivities.zybook_id, ContentResourceActivities.content_resource_id
+FROM ContentResourceActivities, ContentResources
+WHERE zybook_id IN (173, 47, 150, 105, 191, 112, 82, 110, 70, 145, 218, 49, 100, 151, 237, 65, 239, 240, 72, 171, 19, 71, 136, 198, 197, 45, 225, 101, 76, 160, 90, 108) AND
+    ContentResources.content_resource_id = ContentResourceActivities.content_resource_id
+    AND ContentResources.resource_type_id = 6
+INTO OUTFILE '/Users/alexedgcomb/Desktop/activity_data.csv'
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+
+---------------------
+
+-- Mapping zyBook ID to zyBook Code
+
+SELECT zybook_id, zybook_code
+FROM zyBooks
+WHERE zybook_code in ('UMichENGR151Fall2014', 'UNCPCSC2150DiscMathFall14', 'UMichFall2014', 'ULMCSCI3026DiscMathFall14', 'CSULB6973Fall2014', 'USFENG4453Fall2014', 'CUNYCSCI120DMFall2014', 'NorthwesternEECS212Fall2014', 'NNUENGR4230Fall2014', 'UCRCS10Fall2014', 'UCRCS12Fall2014', 'GMUCS112Python3Fall2014', 'CalvinCS108Fall2014', 'UtahValleyCS2300Fall2014', 'OUAME2402Fall2014C', 'UCICS151Fall2014', 'MacombITCS1140Python3Fall2014', 'UCIICS6BDiscreteMathematicsSummer2014', 'CMICHCPS180Fall2014Java', 'SVSUMath300DMFall2014', 'MSUCSE1284Python3Fall2014', 'FernCreek2014', 'TulaneCOSC30006000Fall2014', 'MTechCSCI340DiscMathFall14', 'UTPACSCI1370Fall2014', 'MSStateECE3724Fall2014', 'UCIICS31Fall2014', 'SJSUCS49CHowellFall2014', 'FresnoStateCSCI40CppFall2014', 'CSUFresnoCSCI40Fall2014', 'CHCSCSCI110CppFall14', 'MiamiDadeCOP1334Fall2014')

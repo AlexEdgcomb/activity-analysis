@@ -3,84 +3,90 @@ import sys
 import operator
 from datetime import datetime
 
-timestamp_column_index   = 0
-student_column_index     = 1
-resource_id_column_index = 2
-part_column_index        = 3
-zybook_code_column_index = 9
+timestamp_column_index      = 0
+student_column_index        = 1
+resource_id_column_index    = 2
+part_column_index           = 3
+showed_column_index         = 4
+complete_column_index       = 5
+answered_column_index       = 6
+chapter_number_column_index = 7
+section_number_column_index = 8
+zybook_code_column_index    = 9
 
-def load_activity_data_as_list(filename):
-    with open(filename, 'rbU') as csv_con:
-        reader = csv.reader(csv_con, delimiter=',')
-        return list(reader)
+def get_activity_code(crid, part):
+    return crid + '-' + part
 
-def split_by_zybooks(activity_data):
-    global zybook_code_column_index
+'''
+    |activity_data| is an array of activity data.
     
-    activity_data_header = activity_data[0]
-    activity_data_body   = activity_data[1:]
+    |activity_data_by_zybook_by_student_by_activity| is a dictionary of zybook codes.
+    Each zybook code contains a dictionary of user ids.
+    Each user id contains a dictionary of unique activity.
+    Each unique activity contains a list of activity data for that activity, for that student, for that zybook code.
     
-    zybooks = {}
-    for activity in activity_data_body:
-        zybook_code = activity[zybook_code_column_index]
-        if not(zybook_code in zybooks):
-            zybooks[zybook_code] = [activity_data_header]
-        zybooks[zybook_code].append(activity)
-    
-    return zybooks
-
-def convert_to_epoch(timestamp_string):
-    # Example time format: 2014-08-28 15:12:47
-    timestamp_in_datetime = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S')
-    return (timestamp_in_datetime - datetime(1970, 1, 1)).total_seconds()
-
-def convert_epoch_to_timestamp(epoch_time):
-    seven_hours_in_seconds = 7 * 60 * 60
-    return datetime.fromtimestamp(epoch_time + seven_hours_in_seconds).strftime('%Y-%m-%d %H:%M:%S')
-
-def sort_activity_data(activity_data_by_zybook):
-    global timestamp_column_index
+    Ex:
+    {
+        'zybook_code_1': {
+            'user_id_1': {
+                'crid_1-part_1': [activity_data_1, activity_data_2]
+            }
+        }
+    }
+'''
+def split_by_zybooks_by_student_by_activity(activity_data):
     global student_column_index
     global resource_id_column_index
     global part_column_index
+    global zybook_code_column_index
     
-    for zybook_code in activity_data_by_zybook.keys():
-        activity_data = activity_data_by_zybook[zybook_code]
+    activity_data_by_zybook_by_student_by_activity = {}
+    for datum in activity_data:
+        user_id     = datum[student_column_index]
+        crid        = datum[resource_id_column_index]
+        part        = datum[part_column_index]
+        zybook_code = datum[zybook_code_column_index]
         
-        header = activity_data[0]
-        body   = activity_data[1:]
+        activity_code = get_activity_code(crid, part)
         
-        # Convert timestamps to epoch
-        for activity in body:
-            activity[timestamp_column_index] = convert_to_epoch(activity[timestamp_column_index])
+        if not(zybook_code in activity_data_by_zybook_by_student_by_activity):
+            activity_data_by_zybook_by_student_by_activity[zybook_code] = {}
         
-        body = sorted(body, key=operator.itemgetter(student_column_index, resource_id_column_index, part_column_index, timestamp_column_index))
-        activity_data_by_zybook[zybook_code] = [header] + body
+        if not(user_id in activity_data_by_zybook_by_student_by_activity[zybook_code]):
+            activity_data_by_zybook_by_student_by_activity[zybook_code][user_id] = {}
         
-        # Convert timestamps back to string. Ex: 2014-08-28 15:12:47
-        for activity in body:
-            activity[timestamp_column_index] = convert_epoch_to_timestamp(activity[timestamp_column_index])
+        if not(activity_code in activity_data_by_zybook_by_student_by_activity[zybook_code][user_id]):
+            activity_data_by_zybook_by_student_by_activity[zybook_code][user_id][activity_code] = []
+        
+        activity_data_by_zybook_by_student_by_activity[zybook_code][user_id][activity_code].append(datum)
     
-    return activity_data_by_zybook
+    return activity_data_by_zybook_by_student_by_activity
 
-def write_to_csv(activity_data_by_zybook):
-    for zybook_code in activity_data_by_zybook.keys():
-        activity_data = activity_data_by_zybook[zybook_code]
-        
-        with open(zybook_code + '.csv', 'wb') as out_file:
-            writer = csv.writer(out_file, delimiter=',')
-            for activity in activity_data:
-                writer.writerow(activity)
+def sort_activity_data_by_zybook_by_student_by_activity(activity_data_by_zybook_by_student_by_activity):
+    global timestamp_column_index
+    
+    for zybook_code in activity_data_by_zybook_by_student_by_activity:
+        activity_data_by_student_by_activity = activity_data_by_zybook_by_student_by_activity[zybook_code]
+        for user_id in activity_data_by_student_by_activity:
+            activity_data_by_activity = activity_data_by_zybook_by_student_by_activity[zybook_code][user_id]
+            for activity in activity_data_by_activity:
+                activity_data = activity_data_by_zybook_by_student_by_activity[zybook_code][user_id][activity]
+                activity_data = sorted(activity_data, key=operator.itemgetter(timestamp_column_index))
+    
+    return activity_data_by_zybook_by_student_by_activity
 
-def load_split_and_sort_activity_data(filename, export_to_csv=False):
-    activity_data                  = load_activity_data_as_list(filename)
-    activity_data_by_zybook        = split_by_zybooks(activity_data)
-    sorted_activity_data_by_zybook = sort_activity_data(activity_data_by_zybook)
+def load_file_as_list(filename):
+    with open(filename, 'rbU') as csv_con:
+        reader = csv.reader(csv_con, delimiter=',')
+        # Return all but the first row, which is just header data.
+        return list(reader)[1:]
+
+def load_split_and_sort_activity_data(filename):
+    activity_data                                         = load_file_as_list(filename)
+    activity_data_by_zybook_by_student_by_activity        = split_by_zybooks_by_student_by_activity(activity_data)
+    sorted_activity_data_by_zybook_by_student_by_activity = sort_activity_data_by_zybook_by_student_by_activity(activity_data_by_zybook_by_student_by_activity)
     
-    if export_to_csv:
-        write_to_csv(sorted_activity_data_by_zybook)
-    
-    return sorted_activity_data_by_zybook
+    return sorted_activity_data_by_zybook_by_student_by_activity
 
 def main(filename):
     load_split_and_sort_activity_data(filename)
