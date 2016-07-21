@@ -84,3 +84,29 @@ def getActivityOrderForChapterRange(zybook_code, start_chapter, end_chapter):
                     activity_order.append(activity)
     
     return activity_order
+
+'''
+    |sections_by_chapter| is a dictionary of chapter numbers storing an array of section numbers.
+    Ex: Sections 1.4, 1.5, and 2.1 - 2.10.
+    sections_by_chapter = {
+        1:  [4, 5],
+        2:  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    }
+'''
+def getActivityOrderForSections(zybook_code, sections_by_chapter):
+    activity_by_section_by_chapter_by_zybook = getActivityBySectionByChapterByZyBookCode()
+    activity_by_section_by_chapter           = activity_by_section_by_chapter_by_zybook[zybook_code]
+    
+    activity_order = []
+    for chapter, sections in sections_by_chapter.iteritems():
+        for section in sections:
+            chapter_index = chapter - 1
+            section_index = section - 1
+            
+            if chapter_index < len(activity_by_section_by_chapter):
+                activity_by_section = activity_by_section_by_chapter[chapter_index]
+                if section_index < len(activity_by_section):
+                    for activity in activity_by_section[section_index]:
+                        activity_order.append(activity)
+    
+    return activity_order

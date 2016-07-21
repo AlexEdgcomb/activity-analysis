@@ -1,16 +1,18 @@
-# earnestness-analysis
+# Activity analysis
 
-split_and_sort.py expect a CSV file generated from the following query from zyBook's database:
-'''
-SELECT ContentResourceActivities.timestamp, UserZyBookPermissions.user_id, ContentResources.content_resource_id, ContentResourceActivities.part, ContentResourceActivities.metadata, ContentResourceActivities.complete, ContentResourceActivities.answer, zyBookContentSections.chapter_number, zyBookContentSections.section_number, zyBooks.zybook_code
-FROM ContentResourceActivities, zyBookContentSections, zyBooks, ContentResourceCanonicalSections, ContentResources, UserZyBookPermissions
-WHERE ContentResourceActivities.content_resource_id = ContentResources.content_resource_id
-  AND ContentResources.content_resource_id = ContentResourceCanonicalSections.content_resource_id
-  AND ContentResourceCanonicalSections.canonical_section_id = zyBookContentSections.canonical_section_id
-  AND zyBookContentSections.zybook_id = zyBooks.zybook_id
-  AND ContentResources.resource_type_id = 6
-  AND UserZyBookPermissions.zybook_id = zyBooks.zybook_id
-  AND UserZyBookPermissions.subscribed = 1
-  AND ContentResourceActivities.zybook_id = zyBooks.zybook_id
-  AND zyBooks.zybook_code IN ('UMichENGR151Fall2014', 'UNCPCSC2150DiscMathFall14')
-'''
+Usage:
+1) Add 4 CSV files the to tables folder:
+    * `activity_data.csv`
+    * `CRID_to_chapter_section.csv`
+    * `student_user_ids.csv`
+    * `zyBookCode_to_zyBookID_mapping.csv`
+    
+`activity_data_queries.txt` has example queries to produce the above listed 4 CSV files.
+
+2) Run `format_activity_data.py` to produce `formatted_activity_data.csv`.
+
+`format_activity_data.py` merges the above listed 4 CSV files.
+
+3) Run `activity_analysis.py` to produce reports.
+
+4) Customize `activity_analysis.py` and repeat step 3.

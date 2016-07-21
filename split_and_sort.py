@@ -2,6 +2,7 @@ import csv
 import sys
 import operator
 from datetime import datetime
+import date_range
 
 timestamp_column_index      = 0
 student_column_index        = 1
@@ -34,7 +35,8 @@ def get_activity_code(crid, part):
         }
     }
 '''
-def split_by_zybooks_by_student_by_activity(activity_data):
+def split_by_zybooks_by_student_by_activity(activity_data, date_range=None):
+    global timestamp_column_index
     global student_column_index
     global resource_id_column_index
     global part_column_index
@@ -42,10 +44,19 @@ def split_by_zybooks_by_student_by_activity(activity_data):
     
     activity_data_by_zybook_by_student_by_activity = {}
     for datum in activity_data:
+        timestamp   = datum[timestamp_column_index]
         user_id     = datum[student_column_index]
         crid        = datum[resource_id_column_index]
         part        = datum[part_column_index]
         zybook_code = datum[zybook_code_column_index]
+        
+        # If a date range is specified, then only use datum in that date range
+        if not(date_range == None):
+            activity_timestamp  = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            timestamp_too_early = activity_timestamp < date_range.start_date
+            timestamp_too_late  = activity_timestamp > date_range.end_date
+            if timestamp_too_early or timestamp_too_late:
+                continue
         
         activity_code = get_activity_code(crid, part)
         
@@ -81,9 +92,9 @@ def load_file_as_list(filename):
         # Return all but the first row, which is just header data.
         return list(reader)[1:]
 
-def load_split_and_sort_activity_data(filename):
+def load_split_and_sort_activity_data(filename, date_range=None):
     activity_data                                         = load_file_as_list(filename)
-    activity_data_by_zybook_by_student_by_activity        = split_by_zybooks_by_student_by_activity(activity_data)
+    activity_data_by_zybook_by_student_by_activity        = split_by_zybooks_by_student_by_activity(activity_data, date_range)
     sorted_activity_data_by_zybook_by_student_by_activity = sort_activity_data_by_zybook_by_student_by_activity(activity_data_by_zybook_by_student_by_activity)
     
     return sorted_activity_data_by_zybook_by_student_by_activity

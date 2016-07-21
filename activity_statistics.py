@@ -1,6 +1,7 @@
 import sys
 import split_and_sort
 import format_activity_data
+import date_range
 
 '''
     Convert from activity recordings to activity statistics.
@@ -93,8 +94,8 @@ def convert_to_activity_statistics_by_zybook_by_student_by_activity(activity_dat
     
     return activity_statistics_by_zybook_by_student_by_activity
 
-def getActivityStatistics(filename):
-    activity_data_by_zybook_by_student_by_activity       = split_and_sort.load_split_and_sort_activity_data(filename)
+def getActivityStatistics(filename, date_range=None):
+    activity_data_by_zybook_by_student_by_activity       = split_and_sort.load_split_and_sort_activity_data(filename, date_range)
     activity_statistics_by_zybook_by_student_by_activity = convert_to_activity_statistics_by_zybook_by_student_by_activity(activity_data_by_zybook_by_student_by_activity)
     
     return activity_statistics_by_zybook_by_student_by_activity

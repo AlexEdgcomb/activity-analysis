@@ -8,7 +8,7 @@ def getStudentUserIDsAsSet(filename):
         reader = csv.reader(csv_con, delimiter=',')
         for line in reader:
             student_user_ids.add(line[0])
-    
+
     return student_user_ids
 
 def getSectionChapterByCRID(filename):
@@ -23,7 +23,7 @@ def getSectionChapterByCRID(filename):
                 'section': section,
                 'chapter': chapter
             }
-    
+
     return section_chapter_by_crid
 
 def getZyBookCodeByID(filename):
@@ -34,22 +34,22 @@ def getZyBookCodeByID(filename):
             zybook_id   = line[0]
             zybook_code = line[1]
             zybook_code_by_id[zybook_id] = zybook_code
-    
+
     return zybook_code_by_id
 
 def format_activity_data(activity_data_filename, crid_to_section_chapter_filename, student_user_ids_filename, zybook_id_to_code_filename):
     student_user_ids        = getStudentUserIDsAsSet(student_user_ids_filename)
     section_chapter_by_crid = getSectionChapterByCRID(crid_to_section_chapter_filename)
     zybook_code_by_id       = getZyBookCodeByID(zybook_id_to_code_filename)
-    
+
     with open(activity_data_filename, 'rbU') as csv_con:
         reader = csv.reader(csv_con, delimiter=',')
         with open('formatted_activity_data.csv', 'wb') as out_file:
             writer = csv.writer(out_file, delimiter=',')
-            
+
             header_row = ['timestamp', 'user_id', 'content_resource_id', 'part', 'showed', 'complete', 'answered', 'chapter_number', 'section_number', 'zybook_code']
             writer.writerow(header_row)
-            
+
             for line in reader:
                 timestamp = line[0]
                 part      = line[1]
@@ -59,7 +59,7 @@ def format_activity_data(activity_data_filename, crid_to_section_chapter_filenam
                 user_id   = line[5]
                 zybook_id = line[6]
                 crid      = line[7]
-            
+
                 if user_id in student_user_ids:
                     '''
                         Exclude crids that were removed from the zybooks.
@@ -69,13 +69,13 @@ def format_activity_data(activity_data_filename, crid_to_section_chapter_filenam
                         chapter     = section_chapter_by_crid[crid]['chapter']
                         section     = section_chapter_by_crid[crid]['section']
                         zybook_code = zybook_code_by_id[zybook_id]
-                    
+
                         activity = [timestamp, user_id, crid, part, showed, complete, answered, chapter, section, zybook_code]
                         writer.writerow(activity)
 
 def main(activity_data_filename, crid_to_section_chapter_filename, instructor_ids_filename, zybook_id_to_code_filename):
     format_activity_data(activity_data_filename, crid_to_section_chapter_filename, instructor_ids_filename, zybook_id_to_code_filename)
-    
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
